@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Physics Formulas - Pro Edition</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+            animation: fadeIn 0.8s ease-in;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        header p {
+            font-size: 1.1em;
+            opacity: 0.95;
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .theme-toggle, .reset-btn {
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .theme-toggle:hover, .reset-btn:hover {
+            background: rgba(255,255,255,0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+
+        .selector { 
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+
+        .selector label { 
+            cursor: pointer;
+            padding: 20px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.95);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .selector label:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+
+        .selector input[type="radio"] {
+            width: 20px;
+            height: 20px;
+            accent-color: #667eea;
+        }
+
+        .selector label.checked {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .label-content {
+            flex: 1;
+        }
+
+        .label-title {
+            font-size: 1.1em;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+        .label-formula {
+            font-size: 0.85em;
+            opacity: 0.8;
+            font-style: italic;
+        }
+
+        .formula-section { 
+            display: none;
+            background: rgba(255,255,255,0.95);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+            animation: slideIn 0.5s ease;
+        }
+
+        .formula-section.active { 
+            display: block;
+        }
+
+        .formula-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #f0f0f0;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .formula-title { 
+            font-size: 1.8em;
+            font-weight: 700;
+            color: #333;
+        }
+
+        .result-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 15px;
+            font-size: 1.3em;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+            text-align: center;
+            min-width: 200px;
+        }
+
+        .formula-description {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border-left: 4px solid #667eea;
+        }
+
+        .formula-description h3 {
+            color: #667eea;
+            margin-bottom: 8px;
+        }
+
+        .formula-description p {
+            line-height: 1.6;
+            color: #555;
+        }
+
+        .params-grid {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .param { 
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .param:hover {
+            background: #e9ecef;
+            transform: translateX(5px);
+        }
+
+        .param-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .param label { 
+            font-weight: 600;
+            font-size: 1em;
+            color: #333;
+        }
+
+        .param-value {
+            background: white;
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-weight: 700;
+            color: #667eea;
+            font-size: 1.1em;
+            min-width: 80px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .param-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .param input[type="range"] { 
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            outline: none;
+            -webkit-appearance: none;
+            background: linear-gradient(to right, #667eea 0%, #764ba2 100%);
+        }
+
+        .param input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 3px solid #667eea;
+        }
+
+        .param input[type="range"]::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            border: 3px solid #667eea;
+        }
+
+        .param input[type="number"] { 
+            width: 100px;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1em;
+            text-align: center;
+            font-weight: 600;
+        }
+
+        .param input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chart-container {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            margin-top: 25px;
+        }
+
+        canvas { 
+            max-width: 100%;
+            height: 400px !important;
+        }
+
+        .presets {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            background: white;
+            border: 2px solid #667eea;
+            color: #667eea;
+            padding: 10px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .preset-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: translateY(-2px);
+        }
+
+        body.dark-mode {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+
+        body.dark-mode .formula-section,
+        body.dark-mode .selector label,
+        body.dark-mode .chart-container {
+            background: rgba(30, 30, 50, 0.95);
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .formula-title,
+        body.dark-mode .param label {
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .param {
+            background: rgba(40, 40, 60, 0.8);
+        }
+
+        body.dark-mode .param:hover {
+            background: rgba(50, 50, 70, 0.8);
+        }
+
+        body.dark-mode .formula-description {
+            background: rgba(40, 40, 60, 0.8);
+            border-left-color: #667eea;
+        }
+
+        body.dark-mode .formula-description h3 {
+            color: #8b9cff;
+        }
+
+        body.dark-mode .formula-description p {
+            color: #b0b0b0;
+        }
+
+        body.dark-mode .param-value {
+            background: rgba(50, 50, 70, 0.8);
+            color: #8b9cff;
+        }
+
+        body.dark-mode .param input[type="number"] {
+            background: rgba(50, 50, 70, 0.8);
+            border-color: #555;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .preset-btn {
+            background: rgba(40, 40, 60, 0.8);
+            border-color: #8b9cff;
+            color: #8b9cff;
+        }
+
+        body.dark-mode .preset-btn:hover {
+            background: #667eea;
+            color: white;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @media (max-width: 768px) {
+            header h1 { font-size: 1.8em; }
+            .formula-title { font-size: 1.4em; }
+            .result-display { font-size: 1.1em; min-width: 150px; }
+            .param-controls { flex-direction: column; }
+            canvas { height: 300px !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🔬 Interactive Physics Formulas</h1>
+            <p>Explore physics through interactive visualizations and real-time calculations</p>
+        </header>
+
+        <div class="controls">
+            <button class="theme-toggle" onclick="toggleTheme()">🌓 Toggle Dark Mode</button>
+            <button class="reset-btn" onclick="resetAll()">↺ Reset All</button>
+        </div>
+
+        <div class="selector" role="radiogroup">
+            <label data-formula="kinematic">
+                <input type="radio" name="formula" value="kinematic" checked>
+                <div class="label-content">
+                    <div class="label-title">⚡ Kinematic Motion</div>
+                    <div class="label-formula">v = u + at</div>
+                </div>
+            </label>
+            <label data-formula="kinetic">
+                <input type="radio" name="formula" value="kinetic">
+                <div class="label-content">
+                    <div class="label-title">🏃 Kinetic Energy</div>
+                    <div class="label-formula">KE = ½mv²</div>
+                </div>
+            </label>
+            <label data-formula="potential">
+                <input type="radio" name="formula" value="potential">
+                <div class="label-content">
+                    <div class="label-title">⛰️ Potential Energy</div>
+                    <div class="label-formula">PE = mgh</div>
+                </div>
+            </label>
+        </div>
+
+        <div class="formula-section" id="kinematic">
+            <div class="formula-header">
+                <div class="formula-title">⚡ Kinematic Motion</div>
+                <div class="result-display" id="result1">v = 20.0 m/s</div>
+            </div>
+            
+            <div class="formula-description">
+                <h3>What is this?</h3>
+                <p>This formula calculates final velocity of an object moving with constant acceleration. It's used to describe motion of cars, falling objects, rockets, and more. The velocity changes linearly with time when acceleration is constant.</p>
+            </div>
+
+            <div class="presets">
+                <button class="preset-btn" onclick="setPreset1('car')">🚗 Accelerating Car</button>
+                <button class="preset-btn" onclick="setPreset1('stop')">🛑 Coming to Stop</button>
+                <button class="preset-btn" onclick="setPreset1('rocket')">🚀 Rocket Launch</button>
+            </div>
+
+            <div class="params-grid">
+                <div class="param">
+                    <div class="param-header">
+                        <label for="u1">Initial Velocity (u)</label>
+                        <div class="param-value" id="u1-display">10 m/s</div>
+                    </div>
+                    <div class="param-controls">
+                        <input type="range" id="u1" min="0" max="100" value="10" step="1">
+                        <input type="number" id="u1-num" value="10">
+                    </div>
+                </div>
+                <div class="param">
+                    <div class="param-header">
+                        <label for="a1">Acceleration (a)</label>
+                        <div class="param-value" id="a1-display">2.0 m/s²</div>
+                    </div>
+                    <div class="param-controls">
+                        <input type="range" id="a1" min="-10" max="10" value="2" step="0.1">
+                        <input type="number" id="a1-num" value="2" step="0.1">
+                    </div>
+                </div>
+                <div class="param">
+                    <div class="param-header">
+                        <label for="t1">Time (t)</label>
+                        <div class="param-value" id="t1-display">5.0 s</div>
+                    </div>
+                    <div class="param-controls">
+                        <input type="range" id="t1" min="0" max="20" value="5" step="0.5">
+                        <input type="number" id="t1-num" value="5" step="0.5">
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="chart1"></canvas>
+            </div>
+        </div>
+
+        <div class="formula-section" id="kinetic">
+            <div class="formula-header">
+                <div class="formula-title">🏃 Kinetic Energy</div>
+                <div class="result-display" id="result2">KE = 50.0 J</div>
+            </div>
+            
+            <div class="formula-description">
+                <h3>What is this?</h3>
+                <p>Kinetic energy is the energy an object possesses due to its motion. The faster something moves or the heavier it is, the more kinetic energy it has. Notice how energy increases with the square of velocity - doubling speed quadruples the energy!</p>
+            </div>
+
+            <div class="presets">
+                <button class="preset-btn" onclick="setPreset2('ball')">⚽ Soccer Ball</button>
+                <button class="preset-btn" onclick="setPreset2('car')">🚙 Moving Car</button>
+                <button class="preset-btn" onclick="setPreset2('bullet')">🎯 Bullet</button>
+            </div>
+
+            <div class="params-grid">
+                <div class="param">
+                    <div class="param-header">
+                        <label for="m2">Mass (m)</label>
+                        <div class="param-value" id="m2-display">1.0 kg</div>
+                    </div>
+                    <div class="param-controls">
+                        <input type="range" id="m2" min="0.1" max="100" value="1" step="0.1">
+                        <input type="number" id="m2-num" value="1" step="0.1">
+                    </div>
+                </div>
+                <div class="param">
+                    <div class="param-header">
+                        <label for="v2">Velocity (v)</label>
+                        <div class="param-value" id="v2-display">10 m/s</div>
+                    </div>
+                    <div class="param-controls">
+                        <input type="range" id="v2" min="0" max="50" value="10" step="1">
+                        <input type="number" id="v2-num" value="10">
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="chart2"></canvas>
+            </div>
+        </div>
+
+        <div class="formula-section" id="potential">
+            <div class="formula-header">
+                <div class="formula-title">⛰️ Potential Energy</div>
+                <div class="result-display" id="result3">PE = 98.0 J</div>
+            </div>
+            
+            <div class="formula-description">
+                <h3>What is this?</h3>
+                <p>Gravitational potential energy is the energy stored in an object due to its height above the ground. The higher and heavier an object is, the more potential energy it has. This energy can be converted to kinetic energy when the object falls.</p>
+            </div>
+
+            <div class="presets">
+                <button class="preset-btn" onclick="setPreset3('book')">📚 Book on Shelf</button>
+                <button class="preset-btn" onclick="setPreset3('boulder')">🪨 Boulder on Cliff</button>
+                <button class="preset-btn" onclick="setPreset3('moon')">🌙 Moon Gravity</button>
+            </div>
+
+            <div class="params-grid">
+                <div class="param">
+                    <div class="param-header">
+                        <label for="m3">Mass (m)</label>
+                        <div class="param-value" id="m3-display">1.0 kg</div>
+                    </div>
+                    <div class="param-controls">
+                        <input type="range" id="m3" min="0.1" max="100" value="1" step="0.1">
+                        <input type="number" id="m3-num" value="1" step="0.1">
+                    </div>
+                </div>
+                <div class="param">
+                    <div class="param-header">
+                        <label for="h3">Height (h)</label>
+                        <div class="param-value" id="h3-display">10 m</div>
+                    </div>
+                    <div class="param-controls">
+                        <input type="range" id="h3" min="0" max="100" value="10" step="1">
+                        <input type="number" id="h3-num" value="10">
+                    </div>
+                </div>
+                <div class="param">
+                    <div class="param-header">
+                        <label for="g3">Gravity (g)</label>
+                        <div class="param-value" id="g3-display">9.8 m/s²</div>
+                    </div>
+                    <div class="param-controls">
+                        <input type="range" id="g3" min="1" max="20" value="9.8" step="0.1">
+                        <input type="number" id="g3-num" value="9.8" step="0.1">
+                    </div>
+                </div>
+            </div>
+
+            <div class="chart-container">
+                <canvas id="chart3"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const defaults = {
+            u1: 10, a1: 2, t1: 5,
+            m2: 1, v2: 10,
+            m3: 1, h3: 10, g3: 9.8
+        };
+
+        let chart1, chart2, chart3;
+
+        function syncInputs(sliderId, numId, displayId) {
+            const slider = document.getElementById(sliderId);
+            const num = document.getElementById(numId);
+            const display = document.getElementById(displayId);
+            
+            slider.addEventListener('input', () => { 
+                num.value = slider.value; 
+                updateDisplay(displayId, slider.value, sliderId);
+                updateCharts(); 
+            });
+            num.addEventListener('input', () => { 
+                slider.value = num.value; 
+                updateDisplay(displayId, num.value, sliderId);
+                updateCharts(); 
+            });
+        }
+
+        function updateDisplay(displayId, value, paramId) {
+            const display = document.getElementById(displayId);
+            const val = parseFloat(value);
+            let unit = '';
+            
+            if (paramId.includes('u') || paramId.includes('v')) unit = ' m/s';
+            else if (paramId.includes('a') || paramId.includes('g')) unit = ' m/s²';
+            else if (paramId.includes('t')) unit = ' s';
+            else if (paramId.includes('m')) unit = ' kg';
+            else if (paramId.includes('h')) unit = ' m';
+            
+            display.textContent = val.toFixed(1) + unit;
+        }
+
+        function initCharts() {
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: true, position: 'top' }
+                },
+                interaction: {
+                    intersect: false,
+                    mode: 'index'
+                }
+            };
+
+            chart1 = new Chart(document.getElementById('chart1'), {
+                type: 'line',
+                data: { 
+                    labels: [], 
+                    datasets: [{ 
+                        label: 'Velocity (m/s)', 
+                        data: [], 
+                        borderColor: '#667eea', 
+                        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }] 
+                },
+                options: {
+                    ...commonOptions,
+                    scales: { 
+                        x: { 
+                            title: { display: true, text: 'Time (s)' },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        }, 
+                        y: { 
+                            title: { display: true, text: 'Velocity (m/s)' },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        } 
+                    }
+                }
+            });
+
+            chart2 = new Chart(document.getElementById('chart2'), {
+                type: 'line',
+                data: { 
+                    labels: [], 
+                    datasets: [{ 
+                        label: 'Kinetic Energy (J)', 
+                        data: [], 
+                        borderColor: '#10b981', 
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }] 
+                },
+                options: {
+                    ...commonOptions,
+                    scales: { 
+                        x: { 
+                            title: { display: true, text: 'Velocity (m/s)' },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        }, 
+                        y: { 
+                            title: { display: true, text: 'KE (J)' },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        } 
+                    }
+                }
+            });
+
+            chart3 = new Chart(document.getElementById('chart3'), {
+                type: 'line',
+                data: { 
+                    labels: [], 
+                    datasets: [{ 
+                        label: 'Potential Energy (J)', 
+                        data: [], 
+                        borderColor: '#ef4444', 
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointHoverRadius: 6
+                    }] 
+                },
+                options: {
+                    ...commonOptions,
+                    scales: { 
+                        x: { 
+                            title: { display: true, text: 'Height (m)' },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        }, 
+                        y: { 
+                            title: { display: true, text: 'PE (J)' },
+                            grid: { color: 'rgba(0,0,0,0.05)' }
+                        } 
+                    }
+                }
+            });
+
+            updateCharts();
+        }
+
+        function updateCharts() {
+            const selectedFormula = document.querySelector('input[name="formula"]:checked').value;
+
+            if (selectedFormula === 'kinematic') {
+                const u1 = parseFloat(document.getElementById('u1').value);
+                const a1 = parseFloat(document.getElementById('a1').value);
+                const t1_max = parseFloat(document.getElementById('t1').value);
+                const times = Array.from({length: 50}, (_, i) => i * t1_max / 49);
+                const velocities = times.map(t => u1 + a1 * t);
+                const finalV = u1 + a1 * t1_max;
+                
+                document.getElementById('result1').textContent = `v = ${finalV.toFixed(1)} m/s`;
+                
+                chart1.data.labels = times.map(t => t.toFixed(1));
+                chart1.data.datasets[0].data = velocities;
+                chart1.update('none');
+            } else if (selectedFormula === 'kinetic') {
+                const m2 = parseFloat(document.getElementById('m2').value);
+                const v2_max = parseFloat(document.getElementById('v2').value);
+                const velocities2 = Array.from({length: 50}, (_, i) => i * v2_max / 49);
+                const kes = velocities2.map(v => 0.5 * m2 * v * v);
+                const finalKE = 0.5 * m2 * v2_max * v2_max;
+                
+                document.getElementById('result2').textContent = `KE = ${finalKE.toFixed(1)} J`;
+                
+                chart2.data.labels = velocities2.map(v => v.toFixed(1));
+                chart2.data.datasets[0].data = kes;
+                chart2.update('none');
+            } else if (selectedFormula === 'potential') {
+                const m3 = parseFloat(document.getElementById('m3').value);
+                const g3 = parseFloat(document.getElementById('g3').value);
+                const h3_max = parseFloat(document.getElementById('h3').value);
+                const heights = Array.from({length: 50}, (_, i) => i * h3_max / 49);
+                const pes = heights.map(h => m3 * g3 * h);
+                const finalPE = m3 * g3 * h3_max;
+                
+                document.getElementById('result3').textContent = `PE = ${finalPE.toFixed(1)} J`;
+                
+                chart3.data.labels = heights.map(h => h.toFixed(1));
+                chart3.data.datasets[0].data = pes;
+                chart3.update('none');
+            }
+        }
+
+        function updateFormulaDisplay() {
+            const selectedFormula = document.querySelector('input[name="formula"]:checked').value;
+            document.querySelectorAll('.formula-section').forEach(section => {
+                section.classList.toggle('active', section.id === selectedFormula);
+            });
+            
+            document.querySelectorAll('.selector label').forEach(label => {
+                const input = label.querySelector('input[type="radio"]');
+                label.classList.toggle('checked', input.checked);
+            });
+            
+            updateCharts();
+        }
+
+        function setPreset1(type) {
+            if (type === 'car') {
+                setValues('u1', 0, 'a1', 3, 't1', 10);
+            } else if (type === 'stop') {
+                setValues('u1', 30, 'a1', -5, 't1', 6);
+            } else if (type === 'rocket') {
+                setValues('u1', 0, 'a1', 9, 't1', 15);
+            }
+        }
+
+        function setPreset2(type) {
+            if (type === 'ball') {
+                setValues('m2', 0.4, 'v2', 20);
+            } else if (type === 'car') {
+                setValues('m2', 1000, 'v2', 25);
+            } else if (type === 'bullet') {
+                setValues('m2', 0.01, 'v2', 50);
+            }
+        }
+
+        function setPreset3(type) {
+            if (type === 'book') {
+                setValues('m3', 2, 'h3', 2, 'g3', 9.8);
+            } else if (type === 'boulder') {
+                setValues('m3', 500, 'h3', 50, 'g3', 9.8);
+            } else if (type === 'moon') {
+                setValues('m3', 10, 'h3', 10, 'g3', 1.6);
+            }
+        }
+
+        function setValues(...args) {
+            for (let i = 0; i < args.length; i += 2) {
+                const id = args[i];
+                const value = args[i + 1];
+                document.getElementById(id).value = value;
+                document.getElementById(id + '-num').value = value;
+                updateDisplay(id + '-display', value, id);
+            }
+            updateCharts();
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+        }
+
+        function resetAll() {
+            Object.keys(defaults).forEach(key => {
+                document.getElementById(key).value = defaults[key];
+                document.getElementById(key + '-num').value = defaults[key];
+                updateDisplay(key + '-display', defaults[key], key);
+            });
+            updateCharts();
+        }
+
+        syncInputs('u1', 'u1-num', 'u1-display');
+        syncInputs('a1', 'a1-num', 'a1-display');
+        syncInputs('t1', 't1-num', 't1-display');
+        syncInputs('m2', 'm2-num', 'm2-display');
+        syncInputs('v2', 'v2-num', 'v2-display');
+        syncInputs('m3', 'm3-num', 'm3-display');
+        syncInputs('h3', 'h3-num', 'h3-display');
+        syncInputs('g3', 'g3-num', 'g3-display');
+
+        document.querySelectorAll('input[name="formula"]').forEach(radio => {
+            radio.addEventListener('change', updateFormulaDisplay);
+        });
+
+        initCharts();
+        updateFormulaDisplay();
+    </script>
+</body>
+</html>
