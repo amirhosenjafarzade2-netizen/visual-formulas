@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔮 PERFECT Universal Formula Analyzer v3.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    <style>
+        :root {
+            --primary: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --success: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            --danger: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            --warning: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            --dark: #2c3e50;
+            --light: #f8f9fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--primary);
+            min-height: 100vh;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: var(--primary);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 3em;
+            margin-bottom: 10px;
+            font-weight: 800;
+        }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 800px;
+        }
+        
+        .controls-panel {
+            padding: 40px;
+            background: var(--light);
+            overflow-y: auto;
+        }
+        
+        .charts-panel {
+            padding: 40px;
+            background: white;
+            position: relative;
+        }
+        
+        .formula-section {
+            background: var(--dark);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            margin-bottom: 30px;
+        }
+        
+        .formula-input-group {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .formula-input {
+            flex: 1;
+            min-width: 250px;
+            padding: 16px;
+            font-size: 1.3em;
+            border: 2px solid #34495e;
+            border-radius: 12px;
+            background: #34495e;
+            color: white;
+            font-family: 'Fira Code', monospace;
+        }
+        
+        .btn {
+            padding: 16px 24px;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 1em;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+        
+        .btn:not(:disabled):hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        }
+        
+        .result-display {
+            background: var(--success);
+            color: white;
+            padding: 30px;
+            border-radius: 16px;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2em;
+            font-weight: 800;
+        }
+        
+        .chart-selector {
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--light);
+            border-radius: 12px;
+        }
+        
+        .chart-options {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .chart-btn {
+            padding: 12px 20px;
+            border: 2px solid #3498db;
+            background: white;
+            color: #3498db;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        
+        .chart-btn.active, .chart-btn:hover {
+            background: #3498db;
+            color: white;
+        }
+        
+        .variable-controls {
+            max-height: 400px;
+            overflow-y: auto;
+            gap: 20px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .variable-control {
+            padding: 24px;
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            border: 1px solid #e9ecef;
+        }
+        
+        .variable-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .variable-name {
+            font-weight: 700;
+            font-size: 1.2em;
+            color: var(--dark);
+        }
+        
+        .current-value {
+            font-weight: 800;
+            color: #e74c3c;
+            font-size: 1.4em;
+        }
+        
+        .range-customizer {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .range-input {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+        
+        .slider-container {
+            position: relative;
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        
+        .slider {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: transparent;
+            -webkit-appearance: none;
+            outline: none;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 28px;
+            height: 28px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 6px 16px rgba(79, 172, 254, 0.4);
+        }
+        
+        .range-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.95em;
+            color: #7f8c8d;
+        }
+        
+        .advanced-panel {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 500px;
+            margin: 20px 0;
+        }
+        
+        .legend-custom {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 20px;
+            padding: 20px;
+            background: var(--light);
+            border-radius: 12px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 1em;
+            font-weight: 500;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        
+        .error-message, .success-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 10px 0;
+            font-weight: 500;
+            display: none;
+        }
+        
+        .error-message { background: var(--danger); color: white; }
+        .success-message { background: var(--success); color: white; }
+        
+        .history-panel {
+            background: var(--light);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .history-item {
+            padding: 10px;
+            margin: 5px 0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            transition: all 0.2s ease;
+        }
+        
+        .history-item:hover {
+            background: #e8f4f8;
+            transform: translateX(5px);
+        }
+        
+        .monte-carlo-panel {
+            background: var(--warning);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 20px;
+        }
+        
+        .formula-examples {
+            background: #34495e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.9em;
+        }
+        
+        .formula-examples h4 {
+            margin-bottom: 10px;
+            color: #4ECDC4;
+        }
+        
+        .example-formula {
+            background: #2c3e50;
+            padding: 8px;
+            margin: 5px 0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: 'Fira Code', monospace;
+        }
+        
+        .example-formula:hover {
+            background: #4facfe;
+            transform: translateX(5px);
+        }
+        
+        @media (max-width: 768px) {
+            .main-content { grid-template-columns: 1fr; }
+            .formula-input-group { flex-direction: column; }
+            .range-customizer { grid-template-columns: 1fr; }
+            .advanced-panel { flex-direction: column; }
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&family=Fira+Code:wght@400;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔮 PERFECT Formula Analyzer v3.0</h1>
+            <p>Any Formula • Any Variables • Pro Analysis • 100% Perfect • HIGH PRIORITY FIXES ✨</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="controls-panel">
+                <div class="formula-section">
+                    <div class="formula-input-group">
+                        <input type="text" class="formula-input" id="formulaInput" 
+                               placeholder="profit = price * quantity * (1 - discount/100)"
+                               value="profit = price * quantity * (1 - discount/100)">
+                        <button class="btn btn-success" onclick="analyzer.analyzeFormula()">🔍 Analyze</button>
+                        <button class="btn btn-warning" onclick="analyzer.runMonteCarlo()">🎲 Simulate</button>
+                    </div>
+                    <div class="error-message" id="errorMsg"></div>
+                    <div class="success-message" id="successMsg"></div>
+                    
+                    <div class="formula-examples">
+                        <h4>📚 Example Formulas (click to try):</h4>
+                        <div class="example-formula" onclick="analyzer.loadExample('profit = revenue - cost')">
+                            profit = revenue - cost
+                        </div>
+                        <div class="example-formula" onclick="analyzer.loadExample('bmi = weight / (height ^ 2)')">
+                            bmi = weight / (height ^ 2)
+                        </div>
+                        <div class="example-formula" onclick="analyzer.loadExample('compound = principal * (1 + rate) ^ years')">
+                            compound = principal * (1 + rate) ^ years
+                        </div>
+                        <div class="example-formula" onclick="analyzer.loadExample('force = mass * acceleration')">
+                            force = mass * acceleration
+                        </div>
+                        <div class="example-formula" onclick="analyzer.loadExample('area = 3.14159 * radius ^ 2')">
+                            area = 3.14159 * radius ^ 2
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="result-display">
+                    Result: <span id="result">0</span>
+                </div>
+                
+                <div class="chart-selector">
+                    <label>📊 Chart Type:</label>
+                    <div class="chart-options">
+                        <button class="chart-btn active" data-type="polarArea">Polar</button>
+                        <button class="chart-btn" data-type="doughnut">Doughnut</button>
+                        <button class="chart-btn" data-type="pie">Pie</button>
+                        <button class="chart-btn" data-type="radar">Radar</button>
+                        <button class="chart-btn" data-type="bar">Bar</button>
+                    </div>
+                </div>
+                
+                <div class="variable-controls" id="variableControls"></div>
+                
+                <div class="advanced-panel">
+                    <button class="btn btn-primary" onclick="analyzer.undo()" id="undoBtn" disabled>↶ Undo</button>
+                    <button class="btn btn-primary" onclick="analyzer.redo()" id="redoBtn" disabled>↷ Redo</button>
+                    <button class="btn btn-success" onclick="analyzer.exportChart()">📸 Export Chart</button>
+                    <button class="btn btn-primary" onclick="analyzer.saveFormula()">💾 Save Data</button>
+                    <button class="btn btn-danger" onclick="analyzer.clearHistory()">🗑️ Clear</button>
+                </div>
+                
+                <div class="history-panel">
+                    <h3>📚 Formula History</h3>
+                    <div id="historyList"></div>
+                </div>
+            </div>
+            
+            <div class="charts-panel">
+                <div class="chart-container">
+                    <canvas id="mainChart"></canvas>
+                </div>
+                <div class="legend-custom" id="legend"></div>
+                
+                <div class="monte-carlo-panel" id="monteCarloPanel" style="display: none;">
+                    <h3>🎲 Monte Carlo Results</h3>
+                    <p>Average: <span id="mcAverage">-</span> | Std Dev: <span id="mcStdDev">-</span></p>
+                    <canvas id="mcChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class PerfectFormulaAnalyzer {
+            constructor() {
+                this.formula = '';
+                this.variables = {};
+                this.chartType = 'polarArea';
+                this.chart = null;
+                this.mcChart = null;
+                
+                // HIGH PRIORITY FIX #1: In-memory storage instead of localStorage
+                this.history = [];
+                this.undoStack = [];
+                this.redoStack = [];
+                
+                this.init();
+            }
+            
+            init() {
+                this.setupChartSelector();
+                this.renderHistory();
+                this.analyzeFormula();
+                this.setupKeyboardShortcuts();
+            }
+            
+            // HIGH PRIORITY FIX #4: Keyboard shortcuts
+            setupKeyboardShortcuts() {
+                document.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        if (e.key === 'z') {
+                            e.preventDefault();
+                            this.undo();
+                        }
+                        if (e.key === 'y' || (e.shiftKey && e.key === 'z')) {
+                            e.preventDefault();
+                            this.redo();
+                        }
+                        if (e.key === 'Enter') {
+                            e.preventDefault();
+                            this.analyzeFormula();
+                        }
+                    }
+                });
+            }
+            
+            debounce(func, wait) {
+                let timeout;
+                return (...args) => {
+                    clearTimeout(timeout);
+                    timeout = setTimeout(() => func.apply(this, args), wait);
+                };
+            }
+            
+            setupChartSelector() {
+                document.querySelectorAll('.chart-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.chartType = e.target.dataset.type;
+                        this.createChart();
+                    });
+                });
+            }
+            
+            showMessage(message, type = 'error') {
+                const msgDiv = document.getElementById(type === 'error' ? 'errorMsg' : 'successMsg');
+                msgDiv.textContent = message;
+                msgDiv.style.display = 'block';
+                setTimeout(() => msgDiv.style.display = 'none', 4000);
+            }
+            
+            analyzeFormula() {
+                const input = document.getElementById('formulaInput').value.trim();
+                this.formula = input;
+                
+                try {
+                    // HIGH PRIORITY FIX #3: Better error messages
+                    if (!input) {
+                        throw new Error('⚠️ Please enter a formula! Try: profit = revenue - cost');
+                    }
+                    
+                    // Check for common syntax errors
+                    if (input.includes('//')) {
+                        throw new Error('⚠️ Use single "/" for division, not "//"');
+                    }
+                    if (input.match(/[a-zA-Z]\s+[a-zA-Z]/)) {
+                        throw new Error('⚠️ Use operators between variables: x * y (not x y)');
+                    }
+                    
+                    this.showMessage('', 'success');
+                    
+                    // PERFECT VARIABLE DETECTION: Multi-letter, excludes math functions
+                    const mathFuncs = ['sin', 'cos', 'tan', 'log', 'sqrt', 'exp', 'abs', 'pi', 'e', 'Math', 'pow'];
+                    const varMatch = input.match(/\b(?!\d)([a-zA-Z_][a-zA-Z0-9_]*)\b(?!\s*\()/g) || [];
+                    const uniqueVars = [...new Set(varMatch.filter(v => !mathFuncs.includes(v)))];
+                    
+                    if (!uniqueVars.length) {
+                        throw new Error('⚠️ No variables detected! Use names like "price", "x", "profit".\n💡 Example: revenue = price * quantity');
+                    }
+                    
+                    // Test formula syntax before proceeding
+                    const testVars = {};
+                    uniqueVars.forEach(v => testVars[v] = 1);
+                    try {
+                        this.testCalculate(testVars);
+                    } catch (err) {
+                        throw new Error(`⚠️ Formula syntax error: ${err.message}\n💡 Check for: missing operators, unmatched parentheses, or typos`);
+                    }
+                    
+                    this.variables = {};
+                    this.generateVariableControls(uniqueVars);
+                    this.saveToHistory(input);
+                    this.updateAll();
+                    
+                    this.showMessage('✅ Formula analyzed successfully! Adjust sliders to explore.', 'success');
+                    
+                } catch (error) {
+                    this.showMessage(error.message);
+                }
+            }
+            
+            generateVariableControls(varNames) {
+                const container = document.getElementById('variableControls');
+                container.innerHTML = '';
+                
+                varNames.forEach((varName, index) => {
+                    const min = 0;
+                    const max = Math.max(10, index * 5 + 10);
+                    const defaultVal = 1 + index * 2;
+                    
+                    const control = `
+                        <div class="variable-control">
+                            <div class="variable-header">
+                                <span class="variable-name">📈 ${varName.toUpperCase()}</span>
+                                <span class="current-value" id="val-${varName}">${defaultVal}</span>
+                            </div>
+                            <div class="range-customizer">
+                                <input type="number" class="range-input" id="min-${varName}" value="${min}" step="0.1" 
+                                       placeholder="Min">
+                                <input type="number" class="range-input" id="max-${varName}" value="${max}" step="0.1"
+                                       placeholder="Max">
+                                <input type="number" class="range-input" id="default-${varName}" value="${defaultVal}" step="0.1"
+                                       placeholder="Value">
+                            </div>
+                            <div class="slider-container">
+                                <input type="range" class="slider" id="slider-${varName}" 
+                                       min="${min}" max="${max}" value="${defaultVal}" step="0.1"
+                                       aria-label="Slider for ${varName}">
+                            </div>
+                            <div class="range-display">
+                                <span>${min}</span>
+                                <span>${defaultVal}</span>
+                                <span>${max}</span>
+                            </div>
+                        </div>
+                    `;
+                    container.innerHTML += control;
+                    this.variables[varName] = defaultVal;
+                });
+                
+                this.setupSliders();
+                this.setupRangeCustomizers();
+            }
+            
+            setupSliders() {
+                const debouncedUpdate = this.debounce(() => {
+                    this.updateResult();
+                    this.updateChart();
+                }, 50);
+                
+                Object.keys(this.variables).forEach(varName => {
+                    const slider = document.getElementById(`slider-${varName}`);
+                    if (slider) {
+                        slider.addEventListener('input', (e) => {
+                            this.saveStateForUndo();
+                            this.variables[varName] = parseFloat(e.target.value);
+                            document.getElementById(`val-${varName}`).textContent = 
+                                this.variables[varName].toFixed(2);
+                            debouncedUpdate();
+                        });
+                    }
+                });
+            }
+            
+            setupRangeCustomizers() {
+                const debouncedUpdate = this.debounce(() => {
+                    this.updateResult();
+                    this.updateChart();
+                }, 50);
+                
+                Object.keys(this.variables).forEach(varName => {
+                    ['min', 'max', 'default'].forEach(type => {
+                        const input = document.getElementById(`${type}-${varName}`);
+                        if (input) {
+                            input.addEventListener('change', () => {
+                                const slider = document.getElementById(`slider-${varName}`);
+                                const minInput = document.getElementById(`min-${varName}`);
+                                const maxInput = document.getElementById(`max-${varName}`);
+                                const defaultInput = document.getElementById(`default-${varName}`);
+                                
+                                if (type === 'min') slider.min = input.value;
+                                if (type === 'max') slider.max = input.value;
+                                if (type === 'default') {
+                                    this.saveStateForUndo();
+                                    slider.value = input.value;
+                                    this.variables[varName] = parseFloat(input.value);
+                                    document.getElementById(`val-${varName}`).textContent = parseFloat(input.value).toFixed(2);
+                                }
+                                
+                                // Update range display
+                                const rangeDisplay = slider.parentElement.nextElementSibling;
+                                rangeDisplay.children[0].textContent = minInput.value;
+                                rangeDisplay.children[1].textContent = defaultInput.value;
+                                rangeDisplay.children[2].textContent = maxInput.value;
+                                
+                                debouncedUpdate();
+                            });
+                        }
+                    });
+                });
+            }
+            
+            // HIGH PRIORITY FIX #3: Better error handling with specific messages
+            testCalculate(testVars) {
+                let evalFormula = this.formula.split('=')[1]?.trim() || this.formula;
+                
+                // Support ^ for power
+                evalFormula = evalFormula.replace(/\^/g, '**');
+                
+                Object.entries(testVars).forEach(([varName, value]) => {
+                    const regex = new RegExp(`\\b${varName}\\b`, 'gi');
+                    evalFormula = evalFormula.replace(regex, `(${value})`);
+                });
+                
+                return Function('"use strict"; return (' + evalFormula + ')')();
+            }
+            
+            calculateResult() {
+                try {
+                    let evalFormula = this.formula.split('=')[1]?.trim() || this.formula;
+                    
+                    // HIGH PRIORITY FIX #3: Support ^ for power operator
+                    evalFormula = evalFormula.replace(/\^/g, '**');
+                    
+                    Object.entries(this.variables).forEach(([varName, value]) => {
+                        const regex = new RegExp(`\\b${varName}\\b`, 'gi');
+                        evalFormula = evalFormula.replace(regex, `(${value})`);
+                    });
+                    
+                    const result = Function('"use strict"; return (' + evalFormula + ')')();
+                    
+                    // HIGH PRIORITY FIX #3: Better error messages for invalid results
+                    if (!isFinite(result)) {
+                        throw new Error('Result is infinite or undefined. Check for division by zero.');
+                    }
+                    
+                    return result;
+                } catch (error) {
+                    this.showMessage('⚠️ Calculation error: ' + error.message);
+                    return 0;
+                }
+            }
+            
+            updateResult() {
+                const result = this.calculateResult();
+                document.getElementById('result').textContent = 
+                    isNaN(result) ? 'Error' : result.toFixed(4);
+            }
+            
+            // PERFECT CONTRIBUTION ANALYSIS: Numerical Derivatives
+            getChartData() {
+                const result = this.calculateResult();
+                if (isNaN(result) || result === 0) return { labels: [], data: [], colors: [] };
+                
+                const contributions = {};
+                const epsilon = 0.001;
+                
+                Object.entries(this.variables).forEach(([varName, value]) => {
+                    const tempVars = { ...this.variables };
+                    tempVars[varName] = value + epsilon;
+                    
+                    let tempFormula = this.formula.split('=')[1]?.trim() || this.formula;
+                    tempFormula = tempFormula.replace(/\^/g, '**');
+                    
+                    Object.entries(tempVars).forEach(([v, val]) => {
+                        tempFormula = tempFormula.replace(new RegExp(`\\b${v}\\b`, 'gi'), `(${val})`);
+                    });
+                    
+                    try {
+                        const perturbed = Function('"use strict"; return (' + tempFormula + ')')();
+                        const sensitivity = Math.abs((perturbed - result) / epsilon);
+                        contributions[varName] = sensitivity * Math.abs(value);
+                    } catch (err) {
+                        contributions[varName] = 0;
+                    }
+                });
+                
+                const total = Object.values(contributions).reduce((sum, val) => sum + val, 0) || 1;
+                const normalized = {};
+                Object.entries(contributions).forEach(([key, val]) => {
+                    normalized[key.toUpperCase()] = (val / total) * 100;
+                });
+                
+                const colors = [
+                    '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
+                    '#DDA0DD', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E9',
+                    '#F8C471', '#82E0AA', '#F1948A', '#85C1E9', '#D7BDE2'
+                ];
+                
+                return {
+                    labels: Object.keys(normalized),
+                    data: Object.values(normalized),
+                    colors: colors.slice(0, Object.keys(normalized).length)
+                };
+            }
+            
+            createChart() {
+                const ctx = document.getElementById('mainChart').getContext('2d');
+                const chartData = this.getChartData();
+                
+                if (this.chart) this.chart.destroy();
+                if (chartData.labels.length === 0) return;
+                
+                this.chart = new Chart(ctx, {
+                    type: this.chartType,
+                    data: {
+                        labels: chartData.labels,
+                        datasets: [{
+                            data: chartData.data,
+                            backgroundColor: chartData.colors,
+                            borderColor: '#fff',
+                            borderWidth: 3,
+                            hoverOffset: 15
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                callbacks: {
+                                    label: ctx => `${ctx.label}: ${ctx.parsed.toFixed(1)}%`
+                                }
+                            }
+                        },
+                        scales: this.chartType === 'radar' ? {
+                            r: { beginAtZero: true, max: 100 }
+                        } : {}
+                    }
+                });
+                
+                this.updateLegend(chartData);
+            }
+            
+            updateChart() {
+                if (this.chart) {
+                    const chartData = this.getChartData();
+                    this.chart.data.labels = chartData.labels;
+                    this.chart.data.datasets[0].data = chartData.data;
+                    this.chart.data.datasets[0].backgroundColor = chartData.colors;
+                    this.chart.update('none');
+                    this.updateLegend(chartData);
+                }
+            }
+            
+            updateLegend(chartData) {
+                const legendContainer = document.getElementById('legend');
+                if (chartData.labels.length === 0) {
+                    legendContainer.innerHTML = '<div style="text-align:center;color:#999">No data</div>';
+                    return;
+                }
+                legendContainer.innerHTML = chartData.labels.map((label, i) => `
+                    <div class="legend-item">
+                        <div class="legend-color" style="background-color: ${chartData.colors[i]}"></div>
+                        <span>${label}: ${chartData.data[i].toFixed(1)}%</span>
+                    </div>
+                `).join('');
+            }
+            
+            updateAll() {
+                this.updateResult();
+                this.createChart();
+            }
+            
+            // HIGH PRIORITY FIX #4: Undo/Redo functionality
+            saveStateForUndo() {
+                this.undoStack.push(JSON.parse(JSON.stringify(this.variables)));
+                this.redoStack = []; // Clear redo stack on new action
+                this.updateUndoRedoButtons();
+            }
+            
+            undo() {
+                if (this.undoStack.length === 0) return;
+                
+                this.redoStack.push(JSON.parse(JSON.stringify(this.variables)));
+                this.variables = this.undoStack.pop();
+                
+                // Update UI
+                Object.entries(this.variables).forEach(([varName, value]) => {
+                    const slider = document.getElementById(`slider-${varName}`);
+                    const display = document.getElementById(`val-${varName}`);
+                    const defaultInput = document.getElementById(`default-${varName}`);
+                    
+                    if (slider) slider.value = value;
+                    if (display) display.textContent = value.toFixed(2);
+                    if (defaultInput) defaultInput.value = value;
+                });
+                
+                this.updateAll();
+                this.updateUndoRedoButtons();
+            }
+            
+            redo() {
+                if (this.redoStack.length === 0) return;
+                
+                this.undoStack.push(JSON.parse(JSON.stringify(this.variables)));
+                this.variables = this.redoStack.pop();
+                
+                // Update UI
+                Object.entries(this.variables).forEach(([varName, value]) => {
+                    const slider = document.getElementById(`slider-${varName}`);
+                    const display = document.getElementById(`val-${varName}`);
+                    const defaultInput = document.getElementById(`default-${varName}`);
+                    
+                    if (slider) slider.value = value;
+                    if (display) display.textContent = value.toFixed(2);
+                    if (defaultInput) defaultInput.value = value;
+                });
+                
+                this.updateAll();
+                this.updateUndoRedoButtons();
+            }
+            
+            updateUndoRedoButtons() {
+                const undoBtn = document.getElementById('undoBtn');
+                const redoBtn = document.getElementById('redoBtn');
+                
+                undoBtn.disabled = this.undoStack.length === 0;
+                redoBtn.disabled = this.redoStack.length === 0;
+            }
+            
+            // HIGH PRIORITY FIX #1: In-memory history (no localStorage)
+            saveToHistory(formula) {
+                this.history.unshift({ formula, timestamp: new Date().toISOString() });
+                this.history = this.history.slice(0, 10);
+                this.renderHistory();
+            }
+            
+            renderHistory() {
+                const list = document.getElementById('historyList');
+                if (this.history.length === 0) {
+                    list.innerHTML = '<p style="color:#999;text-align:center;padding:10px">No history yet</p>';
+                    return;
+                }
+                list.innerHTML = this.history.map(item => `
+                    <div class="history-item" onclick="analyzer.loadFormula('${item.formula.replace(/'/g, "\\'")}')">
+                        <span>${item.formula.substring(0, 40)}${item.formula.length > 40 ? '...' : ''}</span>
+                        <small>${new Date(item.timestamp).toLocaleTimeString()}</small>
+                    </div>
+                `).join('');
+            }
+            
+            loadFormula(formula) {
+                document.getElementById('formulaInput').value = formula;
+                this.analyzeFormula();
+            }
+            
+            // HIGH PRIORITY FIX #2: Load example formulas
+            loadExample(formula) {
+                document.getElementById('formulaInput').value = formula;
+                this.analyzeFormula();
+            }
+            
+            clearHistory() {
+                this.history = [];
+                this.renderHistory();
+                this.showMessage('✅ History cleared!', 'success');
+            }
+            
+            saveFormula() {
+                const dataStr = `Formula: ${this.formula}\nVariables: ${JSON.stringify(this.variables, null, 2)}\nResult: ${this.calculateResult()}`;
+                const blob = new Blob([dataStr], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'formula-analysis.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+                this.showMessage('✅ Formula data saved!', 'success');
+            }
+            
+            // HIGH PRIORITY FIX #5: Export chart as image
+            exportChart() {
+                if (!this.chart) {
+                    this.showMessage('⚠️ No chart to export! Analyze a formula first.');
+                    return;
+                }
+                
+                const canvas = document.getElementById('mainChart');
+                canvas.toBlob((blob) => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `chart-${Date.now()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    this.showMessage('✅ Chart exported as PNG!', 'success');
+                });
+            }
+            
+            // HIGH PRIORITY FIX #2: Monte Carlo with proper state restoration
+            async runMonteCarlo() {
+                const simulations = 1000;
+                const results = [];
+                
+                // Save original state
+                const originalVariables = JSON.parse(JSON.stringify(this.variables));
+                
+                for (let i = 0; i < simulations; i++) {
+                    Object.keys(this.variables).forEach(varName => {
+                        const min = parseFloat(document.getElementById(`min-${varName}`).value);
+                        const max = parseFloat(document.getElementById(`max-${varName}`).value);
+                        this.variables[varName] = min + Math.random() * (max - min);
+                    });
+                    results.push(this.calculateResult());
+                }
+                
+                // HIGH PRIORITY FIX #2: Restore original values properly
+                this.variables = originalVariables;
+                Object.entries(this.variables).forEach(([varName, value]) => {
+                    const slider = document.getElementById(`slider-${varName}`);
+                    const display = document.getElementById(`val-${varName}`);
+                    const defaultInput = document.getElementById(`default-${varName}`);
+                    
+                    if (slider) slider.value = value;
+                    if (display) display.textContent = value.toFixed(2);
+                    if (defaultInput) defaultInput.value = value;
+                });
+                
+                this.updateAll();
+                
+                const average = results.reduce((a, b) => a + b, 0) / simulations;
+                const stdDev = Math.sqrt(results.reduce((a, b) => a + Math.pow(b - average, 2), 0) / simulations);
+                
+                document.getElementById('mcAverage').textContent = average.toFixed(4);
+                document.getElementById('mcStdDev').textContent = stdDev.toFixed(4);
+                document.getElementById('monteCarloPanel').style.display = 'block';
+                
+                this.createMonteCarloChart(results);
+                this.showMessage(`✅ Monte Carlo Complete! ${simulations} simulations`, 'success');
+            }
+            
+            createMonteCarloChart(data) {
+                const ctx = document.getElementById('mcChart').getContext('2d');
+                if (this.mcChart) this.mcChart.destroy();
+                
+                this.mcChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: Array.from({length: data.length}, (_, i) => i + 1),
+                        datasets: [{
+                            label: 'Simulation Results',
+                            data: data,
+                            borderColor: '#e74c3c',
+                            backgroundColor: 'rgba(231, 76, 60, 0.1)',
+                            tension: 0.1,
+                            pointRadius: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: { beginAtZero: false },
+                            x: { display: false }
+                        },
+                        plugins: {
+                            legend: { display: false }
+                        }
+                    }
+                });
+            }
+        }
+        
+        const analyzer = new PerfectFormulaAnalyzer();
+        window.analyzer = analyzer;
+    </script>
+</body>
+</html>
